@@ -8,10 +8,14 @@ public sealed class Interpreter
     public sealed record VariableInfo(string Type, object? Value);
     private readonly Dictionary<string, VariableInfo> _vars = new(StringComparer.OrdinalIgnoreCase);
     public IReadOnlyDictionary<string, object?> Variables => _vars.ToDictionary(x=>x.Key,x=>x.Value.Value,StringComparer.OrdinalIgnoreCase);
+    public sealed record TraceStep(int Line,string Statement,IReadOnlyDictionary<string,object?> Variables,string Output);
+    public List<TraceStep> Trace { get; } = new();
+    void Snap(int line,string statement,List<string> output)=>Trace.Add(new(line,statement,_vars.ToDictionary(x=>x.Key,x=>x.Value.Value,StringComparer.OrdinalIgnoreCase),string.Join(Environment.NewLine,output)));
 
     public string Run(string source, Func<string, string>? input = null)
     {
         _vars.Clear();
+        Trace.Clear();
         var output=new List<string>();
         var lines=source.Replace("\r","").Split('\n');
         DeclareVariables(lines);
@@ -50,6 +54,7 @@ public sealed class Interpreter
             if(ifm.Success)
             {
                 var (elseAt,endAt)=FindIfBounds(lines,i+1,to);
+                Snap(i+1,line,output);
                 if(ToBool(Eval(ifm.Groups[1].Value,i+1))) ExecuteBlock(lines,i+1,elseAt>=0?elseAt:endAt,output,input);
                 else if(elseAt>=0) ExecuteBlock(lines,elseAt+1,endAt,output,input);
                 i=endAt;continue;
@@ -72,6 +77,7 @@ public sealed class Interpreter
                         Assign(name,value,i+1);
                     } catch(FormatException) { throw Error(i+1,$"Μη έγκυρη τιμή για τη μεταβλητή «{name}»."); }
                 }
+                Snap(i+1,line,output);
                 continue;
             }
 
@@ -82,6 +88,7 @@ public sealed class Interpreter
                 int guard=0;
                 while(ToBool(Eval(whileM.Groups[1].Value,i+1)))
                 {
+                    Snap(i+1,line,output);
                     ExecuteBlock(lines,i+1,loopEnd,output,input);
                     if(++guard>100000) throw Error(i+1,"Η επανάληψη ξεπέρασε τα 100000 βήματα.");
                 }
@@ -100,6 +107,7 @@ public sealed class Interpreter
                 for(var v=first;step>0?v<=last:v>=last;v+=step)
                 {
                     Assign(name,v,i+1);
+                    Snap(i+1,line,output);
                     ExecuteBlock(lines,i+1,loopEnd,output,input);
                 }
                 i=loopEnd;continue;
@@ -113,6 +121,7 @@ public sealed class Interpreter
                 int guard=0;
                 do
                 {
+                    Snap(i+1,line,output);
                     ExecuteBlock(lines,i+1,loopEnd,output,input);
                     if(++guard>100000) throw Error(i+1,"Η επανάληψη ξεπέρασε τα 100000 βήματα.");
                 } while(!ToBool(Eval(until.Groups[1].Value,loopEnd+1)));
@@ -120,10 +129,10 @@ public sealed class Interpreter
             }
 
             var write=Regex.Match(line,@"^(ΓΡΑΨΕ|ΕΜΦΑΝΙΣΕ)\s+(.+)$",RegexOptions.IgnoreCase);
-            if(write.Success){output.Add(Print(write.Groups[2].Value,i+1));continue;}
+            if(write.Success){output.Add(Print(write.Groups[2].Value,i+1));Snap(i+1,line,output);continue;}
 
             var assign=Regex.Match(line,@"^([\p{L}_][\p{L}\p{N}_]*)\s*(?:<-|←)\s*(.+)$");
-            if(assign.Success){Assign(assign.Groups[1].Value,Eval(assign.Groups[2].Value,i+1),i+1);continue;}
+            if(assign.Success){Assign(assign.Groups[1].Value,Eval(assign.Groups[2].Value,i+1),i+1);Snap(i+1,line,output);continue;}
 
             if(Regex.IsMatch(line,@"^(ΠΡΟΓΡΑΜΜΑ|ΑΛΓΟΡΙΘΜΟΣ|ΜΕΤΑΒΛΗΤΕΣ|ΑΚΕΡΑΙΕΣ|ΠΡΑΓΜΑΤΙΚΕΣ|ΧΑΡΑΚΤΗΡΕΣ|ΛΟΓΙΚΕΣ)\b",RegexOptions.IgnoreCase)) continue;
             throw Error(i+1,$"Δεν αναγνωρίζεται η εντολή «{line}».");

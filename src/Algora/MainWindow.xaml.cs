@@ -10,9 +10,13 @@ using Algora.Core;
 namespace Algora;
 public partial class MainWindow : Window
 {
- readonly Interpreter _interpreter=new(); bool _dark,_highlighting; string? _file; WindowStyle _oldStyle; WindowState _oldState;
+ readonly Interpreter _interpreter=new(); bool _dark,_highlighting,_ready; string? _file; WindowStyle _oldStyle; WindowState _oldState;
  static readonly string[] Keywords={"ΠΡΟΓΡΑΜΜΑ","ΜΕΤΑΒΛΗΤΕΣ","ΑΚΕΡΑΙΕΣ","ΠΡΑΓΜΑΤΙΚΕΣ","ΧΑΡΑΚΤΗΡΕΣ","ΛΟΓΙΚΕΣ","ΑΡΧΗ","ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ","ΔΙΑΒΑΣΕ","ΓΡΑΨΕ","ΕΜΦΑΝΙΣΕ","ΑΝ","ΤΟΤΕ","ΑΛΛΙΩΣ","ΤΕΛΟΣ_ΑΝ","ΚΑΙ","Ή","Η","ΟΧΙ","ΑΛΗΘΗΣ","ΨΕΥΔΗΣ","ΟΣΟ","ΕΠΑΝΑΛΑΒΕ","ΓΙΑ","ΑΠΟ","ΜΕΧΡΙ","ΜΕ_ΒΗΜΑ","ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ","ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ","ΜΕΧΡΙΣ_ΟΤΟΥ"};
- public MainWindow(){InitializeComponent();UpdateLines();ApplyTheme();Highlight();}
+ public MainWindow()
+ {
+  InitializeComponent();
+  Loaded+=(_,__)=>{_ready=true;UpdateLines();ApplyTheme();Highlight();};
+ }
  static Brush B(string h)=>new SolidColorBrush((Color)ColorConverter.ConvertFromString(h));
  string CodeText()=>new TextRange(Editor.Document.ContentStart,Editor.Document.ContentEnd).Text.TrimEnd('\r','\n');
  void SetCode(string s){Editor.Document.Blocks.Clear();Editor.Document.Blocks.Add(new Paragraph(new Run(s)){Margin=new Thickness(0)});Highlight();}
@@ -23,7 +27,7 @@ public partial class MainWindow : Window
   StatusBar.Background=B(_dark?"#101A2B":"#172033");StatusText.Foreground=VersionText.Foreground=B("#CBD5E1");StatusDot.Fill=B("#22C55E");ThemeButton.Background=B(_dark?"#253552":"#EEF2FF");ThemeButton.Foreground=B(_dark?"#DCE6FF":"#3730A3");RunButton.Background=B("#5B4FF7");RunButton.Foreground=Brushes.White;Highlight();
  }
  void Highlight(){
-  if(_highlighting||Editor==null)return;_highlighting=true;
+  if(!_ready||_highlighting||Editor==null)return;_highlighting=true;
   try{
    var caret=new TextRange(Editor.Document.ContentStart,Editor.CaretPosition).Text.Length;
    var normal=B(_dark?"#E8EEF8":"#172033");var keyword=B(_dark?"#8AB4FF":"#4F46E5");
@@ -71,7 +75,7 @@ public partial class MainWindow : Window
  void New_Click(object s,RoutedEventArgs e){SetCode("");_file=null;FileText.Text="χωρίς τίτλο.glossa";StatusText.Text="Νέο αρχείο";}
  void Open_Click(object s,RoutedEventArgs e){var d=new OpenFileDialog{Filter="Αρχεία Algora (*.glossa;*.algo)|*.glossa;*.algo|Αρχεία κειμένου (*.txt)|*.txt|Όλα τα αρχεία|*.*"};if(d.ShowDialog()==true){SetCode(File.ReadAllText(d.FileName));_file=d.FileName;FileText.Text=Path.GetFileName(_file);StatusText.Text="Το αρχείο άνοιξε";}}
  void Save_Click(object s,RoutedEventArgs e){if(_file==null){var d=new SaveFileDialog{Filter="Αρχείο ΓΛΩΣΣΑΣ (*.glossa)|*.glossa|Αλγόριθμος (*.algo)|*.algo|Αρχείο κειμένου (*.txt)|*.txt",DefaultExt=".glossa"};if(d.ShowDialog()!=true)return;_file=d.FileName;}File.WriteAllText(_file,CodeText());FileText.Text=Path.GetFileName(_file);StatusText.Text="Αποθηκεύτηκε";}
- void Editor_TextChanged(object s,TextChangedEventArgs e){UpdateLines();Highlight();}
+ void Editor_TextChanged(object s,TextChangedEventArgs e){if(!_ready)return;UpdateLines();Highlight();}
  void UpdateLines(){if(LineNumbers==null||Editor==null)return;var n=Math.Max(1,CodeText().Split('\n').Length);LineNumbers.Text=string.Join(Environment.NewLine,Enumerable.Range(1,n));}
  void Editor_KeyDown(object s,KeyEventArgs e){if(e.Key==Key.F5){Run_Click(s,new RoutedEventArgs());e.Handled=true;}}
  void Window_KeyDown(object s,KeyEventArgs e){if(e.Key!=Key.F11)return;if(WindowStyle!=WindowStyle.None){_oldStyle=WindowStyle;_oldState=WindowState;WindowStyle=WindowStyle.None;WindowState=WindowState.Maximized;}else{WindowStyle=_oldStyle;WindowState=_oldState;}}

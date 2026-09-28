@@ -26,9 +26,9 @@ public partial class MainWindow : Window
   if(_highlighting||Editor==null)return;_highlighting=true;
   try{
    var caretOffset=new TextRange(Editor.Document.ContentStart,Editor.CaretPosition).Text.Length;
-   var all=new TextRange(Editor.Document.ContentStart,Editor.Document.ContentEnd);all.Foreground=B(_dark?"#E8EEF8":"#172033");all.FontWeight=FontWeights.Normal;
+   var all=new TextRange(Editor.Document.ContentStart,Editor.Document.ContentEnd);all.ApplyPropertyValue(TextElement.ForegroundProperty,B(_dark?"#E8EEF8":"#172033"));all.ApplyPropertyValue(TextElement.FontWeightProperty,FontWeights.Normal);
    var text=all.Text;var pattern=@"\b("+string.Join("|",Keywords.Select(Regex.Escape))+@")\b";
-   foreach(Match m in Regex.Matches(text,pattern,RegexOptions.IgnoreCase)){var s=AtOffset(m.Index),e=AtOffset(m.Index+m.Length);if(s!=null&&e!=null){var r=new TextRange(s,e);r.Foreground=B(_dark?"#8AB4FF":"#4F46E5");r.FontWeight=FontWeights.SemiBold;}}
+   foreach(Match m in Regex.Matches(text,pattern,RegexOptions.IgnoreCase)){var start=AtOffset(m.Index);var end=AtOffset(m.Index+m.Length);if(start!=null&&end!=null){var r=new TextRange(start,end);r.ApplyPropertyValue(TextElement.ForegroundProperty,B(_dark?"#8AB4FF":"#4F46E5"));r.ApplyPropertyValue(TextElement.FontWeightProperty,FontWeights.SemiBold);}}
    Editor.CaretPosition=AtOffset(Math.Min(caretOffset,text.Length))??Editor.Document.ContentEnd;
   }finally{_highlighting=false;}
  }

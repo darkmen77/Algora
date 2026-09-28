@@ -43,10 +43,10 @@ public sealed class Interpreter
         {
             var line=lines[i].Trim();
             if(string.IsNullOrWhiteSpace(line)||line.StartsWith("!")) continue;
-            if(Regex.IsMatch(line,@"^(ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ|ΤΕΛΟΣ\\b)",RegexOptions.IgnoreCase)) return i;
-            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ|ΤΕΛΟΣ_ΑΝ|ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ|ΜΕΧΡΙΣ_ΟΤΟΥ)\\b",RegexOptions.IgnoreCase)) return i;
+            if(Regex.IsMatch(line,@"^(ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ|ΤΕΛΟΣ\b)",RegexOptions.IgnoreCase)) return i;
+            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ|ΤΕΛΟΣ_ΑΝ|ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ|ΜΕΧΡΙΣ_ΟΤΟΥ)\b",RegexOptions.IgnoreCase)) return i;
 
-            var ifm=Regex.Match(line,@"^ΑΝ\\s+(.+?)\\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
+            var ifm=Regex.Match(line,@"^ΑΝ\s+(.+?)\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
             if(ifm.Success)
             {
                 var (elseAt,endAt)=FindIfBounds(lines,i+1,to);
@@ -55,7 +55,7 @@ public sealed class Interpreter
                 i=endAt;continue;
             }
 
-            var read=Regex.Match(line,@"^ΔΙΑΒΑΣΕ\\s+(.+)$",RegexOptions.IgnoreCase);
+            var read=Regex.Match(line,@"^ΔΙΑΒΑΣΕ\s+(.+)$",RegexOptions.IgnoreCase);
             if(read.Success)
             {
                 if(input is null) throw Error(i+1,"Δεν είναι διαθέσιμη είσοδος δεδομένων.");
@@ -75,10 +75,10 @@ public sealed class Interpreter
                 continue;
             }
 
-            var whileM=Regex.Match(line,@"^ΟΣΟ\\s+(.+?)\\s+ΕΠΑΝΑΛΑΒΕ$",RegexOptions.IgnoreCase);
+            var whileM=Regex.Match(line,@"^ΟΣΟ\s+(.+?)\s+ΕΠΑΝΑΛΑΒΕ$",RegexOptions.IgnoreCase);
             if(whileM.Success)
             {
-                var loopEnd=FindMatching(lines,i+1,to,@"^ΟΣΟ\\b.*\\bΕΠΑΝΑΛΑΒΕ$",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΟΣΟ\b.*\bΕΠΑΝΑΛΑΒΕ$",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
                 int guard=0;
                 while(ToBool(Eval(whileM.Groups[1].Value,i+1)))
                 {
@@ -88,10 +88,10 @@ public sealed class Interpreter
                 i=loopEnd;continue;
             }
 
-            var forM=Regex.Match(line,@"^ΓΙΑ\\s+([\\p{L}_][\\p{L}\\p{N}_]*)\\s+ΑΠΟ\\s+(.+?)\\s+ΜΕΧΡΙ\\s+(.+?)(?:\\s+ΜΕ_ΒΗΜΑ\\s+(.+))?$",RegexOptions.IgnoreCase);
+            var forM=Regex.Match(line,@"^ΓΙΑ\s+([\p{L}_][\p{L}\p{N}_]*)\s+ΑΠΟ\s+(.+?)\s+ΜΕΧΡΙ\s+(.+?)(?:\s+ΜΕ_ΒΗΜΑ\s+(.+))?$",RegexOptions.IgnoreCase);
             if(forM.Success)
             {
-                var loopEnd=FindMatching(lines,i+1,to,@"^ΓΙΑ\\b",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΓΙΑ\b",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
                 var name=forM.Groups[1].Value;
                 var first=Convert.ToDouble(Eval(forM.Groups[2].Value,i+1),CultureInfo.InvariantCulture);
                 var last=Convert.ToDouble(Eval(forM.Groups[3].Value,i+1),CultureInfo.InvariantCulture);
@@ -107,8 +107,8 @@ public sealed class Interpreter
 
             if(Regex.IsMatch(line,@"^ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ$",RegexOptions.IgnoreCase))
             {
-                var loopEnd=FindMatching(lines,i+1,to,@"^ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ$",@"^ΜΕΧΡΙΣ_ΟΤΟΥ\\b");
-                var until=Regex.Match(lines[loopEnd].Trim(),@"^ΜΕΧΡΙΣ_ΟΤΟΥ\\s+(.+)$",RegexOptions.IgnoreCase);
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ$",@"^ΜΕΧΡΙΣ_ΟΤΟΥ\b");
+                var until=Regex.Match(lines[loopEnd].Trim(),@"^ΜΕΧΡΙΣ_ΟΤΟΥ\s+(.+)$",RegexOptions.IgnoreCase);
                 if(!until.Success) throw Error(loopEnd+1,"Αναμενόταν συνθήκη μετά το ΜΕΧΡΙΣ_ΟΤΟΥ.");
                 int guard=0;
                 do
@@ -119,13 +119,13 @@ public sealed class Interpreter
                 i=loopEnd;continue;
             }
 
-            var write=Regex.Match(line,@"^(ΓΡΑΨΕ|ΕΜΦΑΝΙΣΕ)\\s+(.+)$",RegexOptions.IgnoreCase);
+            var write=Regex.Match(line,@"^(ΓΡΑΨΕ|ΕΜΦΑΝΙΣΕ)\s+(.+)$",RegexOptions.IgnoreCase);
             if(write.Success){output.Add(Print(write.Groups[2].Value,i+1));continue;}
 
-            var assign=Regex.Match(line,@"^([\\p{L}_][\\p{L}\\p{N}_]*)\\s*(?:<-|←)\\s*(.+)$");
+            var assign=Regex.Match(line,@"^([\p{L}_][\p{L}\p{N}_]*)\s*(?:<-|←)\s*(.+)$");
             if(assign.Success){Assign(assign.Groups[1].Value,Eval(assign.Groups[2].Value,i+1),i+1);continue;}
 
-            if(Regex.IsMatch(line,@"^(ΠΡΟΓΡΑΜΜΑ|ΑΛΓΟΡΙΘΜΟΣ|ΜΕΤΑΒΛΗΤΕΣ|ΑΚΕΡΑΙΕΣ|ΠΡΑΓΜΑΤΙΚΕΣ|ΧΑΡΑΚΤΗΡΕΣ|ΛΟΓΙΚΕΣ)\\b",RegexOptions.IgnoreCase)) continue;
+            if(Regex.IsMatch(line,@"^(ΠΡΟΓΡΑΜΜΑ|ΑΛΓΟΡΙΘΜΟΣ|ΜΕΤΑΒΛΗΤΕΣ|ΑΚΕΡΑΙΕΣ|ΠΡΑΓΜΑΤΙΚΕΣ|ΧΑΡΑΚΤΗΡΕΣ|ΛΟΓΙΚΕΣ)\b",RegexOptions.IgnoreCase)) continue;
             throw Error(i+1,$"Δεν αναγνωρίζεται η εντολή «{line}».");
         }
         return to;

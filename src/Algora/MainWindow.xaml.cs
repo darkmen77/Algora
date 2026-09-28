@@ -11,7 +11,13 @@ public partial class MainWindow : Window
  public MainWindow(){InitializeComponent();UpdateLines();ApplyTheme();}
  static Brush B(string h)=>new SolidColorBrush((Color)ColorConverter.ConvertFromString(h));
  void ApplyTheme(){
-  var bg=B(_dark?"#0B1220":"#F3F6FB"),card=B(_dark?"#151F32":"#FFFFFF"),header=B(_dark?"#1B2940":"#F8FAFC"),text=B(_dark?"#E8EEF8":"#172033"),muted=B(_dark?"#93A4BC":"#64748B"),border=B(_dark?"#263650":"#E2E8F0"),gutter=B(_dark?"#111A2A":"#F7F9FC");
+  var bg=B(_dark?"#0B1220":"#F3F6FB");
+  var card=B(_dark?"#151F32":"#FFFFFF");
+  var header=B(_dark?"#1B2940":"#F8FAFC");
+  var text=B(_dark?"#E8EEF8":"#172033");
+  var muted=B(_dark?"#93A4BC":"#64748B");
+  var border=B(_dark?"#263650":"#E2E8F0");
+  var gutter=B(_dark?"#111A2A":"#F7F9FC");
   Background=Root.Background=bg; TopBar.Background=Toolbar.Background=card; TopBar.BorderBrush=Toolbar.BorderBrush=border; EditorCard.Background=OutputCard.Background=card; EditorCard.BorderBrush=OutputCard.BorderBrush=border; EditorHeader.Background=ConsoleHeader.Background=header;
   TitleText.Foreground=EditorHeaderText.Foreground=ConsoleHeaderText.Foreground=VariablesTitle.Foreground=text; SubtitleText.Foreground=FileText.Foreground=muted; Editor.Background=ConsoleBox.Background=VariablesPanel.Background=VariablesGrid.Background=card; Editor.Foreground=ConsoleBox.Foreground=VariablesGrid.Foreground=text; LineNumbers.Background=gutter;LineNumbers.Foreground=muted; VariablesPanel.BorderBrush=border;
   StatusBar.Background=B(_dark?"#101A2B":"#172033");StatusText.Foreground=VersionText.Foreground=B("#CBD5E1");StatusDot.Fill=B("#22C55E"); ThemeButton.Background=B(_dark?"#253552":"#EEF2FF");ThemeButton.Foreground=B(_dark?"#DCE6FF":"#3730A3");RunButton.Background=B("#5B4FF7");RunButton.Foreground=Brushes.White;

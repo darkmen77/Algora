@@ -25,14 +25,45 @@ public partial class MainWindow : Window
  void Highlight(){
   if(_highlighting||Editor==null)return;_highlighting=true;
   try{
-   var caretOffset=new TextRange(Editor.Document.ContentStart,Editor.CaretPosition).Text.Length;
-   var all=new TextRange(Editor.Document.ContentStart,Editor.Document.ContentEnd);all.ApplyPropertyValue(TextElement.ForegroundProperty,B(_dark?"#E8EEF8":"#172033"));all.ApplyPropertyValue(TextElement.FontWeightProperty,FontWeights.Normal);
-   var text=all.Text;var pattern=@"\b("+string.Join("|",Keywords.Select(Regex.Escape))+@")\b";
-   foreach(Match m in Regex.Matches(text,pattern,RegexOptions.IgnoreCase)){var start=AtOffset(m.Index);var end=AtOffset(m.Index+m.Length);if(start!=null&&end!=null){var r=new TextRange(start,end);r.ApplyPropertyValue(TextElement.ForegroundProperty,B(_dark?"#8AB4FF":"#4F46E5"));r.ApplyPropertyValue(TextElement.FontWeightProperty,FontWeights.SemiBold);}}
-   Editor.CaretPosition=AtOffset(Math.Min(caretOffset,text.Length))??Editor.Document.ContentEnd;
+   var caret=new TextRange(Editor.Document.ContentStart,Editor.CaretPosition).Text.Length;
+   var normal=B(_dark?"#E8EEF8":"#172033");var keyword=B(_dark?"#8AB4FF":"#4F46E5");
+   foreach(var paragraph in Editor.Document.Blocks.OfType<Paragraph>())
+   {
+    var plain=new TextRange(paragraph.ContentStart,paragraph.ContentEnd).Text;
+    paragraph.Inlines.Clear();
+    var regex=new Regex(@"(?<![\\p{L}\\p{N}_])("+string.Join("|",Keywords.OrderByDescending(k=>k.Length).Select(Regex.Escape))+@")(?![\\p{L}\\p{N}_])",RegexOptions.IgnoreCase);
+    int pos=0;
+    foreach(Match m in regex.Matches(plain))
+    {
+     if(m.Index>pos) paragraph.Inlines.Add(new Run(plain[pos..m.Index]){Foreground=normal});
+     paragraph.Inlines.Add(new Run(m.Value){Foreground=keyword,FontWeight=FontWeights.SemiBold});
+     pos=m.Index+m.Length;
+    }
+    if(pos<plain.Length) paragraph.Inlines.Add(new Run(plain[pos..]){Foreground=normal});
+   }
+   Editor.CaretPosition=PointerAtTextOffset(caret);
   }finally{_highlighting=false;}
  }
- TextPointer? AtOffset(int offset){var p=Editor.Document.ContentStart;int n=0;while(p!=null){if(p.GetPointerContext(LogicalDirection.Forward)==TextPointerContext.Text){var run=p.GetTextInRun(LogicalDirection.Forward);if(n+run.Length>=offset)return p.GetPositionAtOffset(offset-n);}else if(p.GetPointerContext(LogicalDirection.Forward)==TextPointerContext.ElementEnd&&p.Parent is Paragraph){if(n==offset)return p;n++;}p=p.GetNextContextPosition(LogicalDirection.Forward);}return Editor.Document.ContentEnd;}
+ TextPointer PointerAtTextOffset(int wanted)
+ {
+  var p=Editor.Document.ContentStart;int count=0;
+  while(p!=null)
+  {
+   if(p.GetPointerContext(LogicalDirection.Forward)==TextPointerContext.Text)
+   {
+    var run=p.GetTextInRun(LogicalDirection.Forward);
+    if(count+run.Length>=wanted)return p.GetPositionAtOffset(wanted-count)??p;
+    count+=run.Length;
+   }
+   else if(p.GetPointerContext(LogicalDirection.Forward)==TextPointerContext.ElementEnd&&p.Parent is Paragraph)
+   {
+    if(count>=wanted)return p;
+    count++;
+   }
+   p=p.GetNextContextPosition(LogicalDirection.Forward);
+  }
+  return Editor.Document.ContentEnd;
+ }
  void Theme_Click(object s,RoutedEventArgs e){_dark=!_dark;ApplyTheme();}
  void Run_Click(object s,RoutedEventArgs e){try{var r=_interpreter.Run(CodeText(),PromptInput);ConsoleBox.Text=string.IsNullOrWhiteSpace(r)?"✓ Η εκτέλεση ολοκληρώθηκε.":r;VariablesGrid.ItemsSource=_interpreter.Variables.Select(v=>new{Name=v.Key,Value=v.Value}).ToList();StatusText.Text="Η εκτέλεση ολοκληρώθηκε";StatusDot.Fill=B("#22C55E");}catch(Exception ex){ConsoleBox.Text="Σφάλμα: "+ex.Message;StatusText.Text="Σφάλμα εκτέλεσης";StatusDot.Fill=B("#EF4444");}}
  string PromptInput(string name){var w=new Window{Title="ΔΙΑΒΑΣΕ — "+name,Width=380,Height=160,WindowStartupLocation=WindowStartupLocation.CenterOwner,Owner=this,ResizeMode=ResizeMode.NoResize};var g=new Grid{Margin=new Thickness(18)};g.RowDefinitions.Add(new RowDefinition());g.RowDefinitions.Add(new RowDefinition());g.RowDefinitions.Add(new RowDefinition());var label=new TextBlock{Text=$"Δώσε τιμή για τη μεταβλητή {name}:",Margin=new Thickness(0,0,0,8)};var box=new TextBox{Height=28};var ok=new Button{Content="OK",Width=80,Height=28,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,8,0,0),IsDefault=true};Grid.SetRow(box,1);Grid.SetRow(ok,2);g.Children.Add(label);g.Children.Add(box);g.Children.Add(ok);w.Content=g;ok.Click+=(_,__)=>w.DialogResult=true;w.Loaded+=(_,__)=>box.Focus();if(w.ShowDialog()!=true)throw new InvalidOperationException("Η εισαγωγή ακυρώθηκε.");return box.Text;}

@@ -7,6 +7,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Algora</AssemblyName>
     <RootNamespace>Algora</RootNamespace>
-    <Version>0.1.0-alpha.1</Version>
+    <Version>0.1.0-alpha.2</Version>
   </PropertyGroup>
 </Project>

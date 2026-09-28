@@ -43,26 +43,89 @@ public sealed class Interpreter
         {
             var line=lines[i].Trim();
             if(string.IsNullOrWhiteSpace(line)||line.StartsWith("!")) continue;
-            if(Regex.IsMatch(line,@"^(ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ|ΤΕΛΟΣ\b)",RegexOptions.IgnoreCase)) return i;
-            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ|ΤΕΛΟΣ_ΑΝ)\b",RegexOptions.IgnoreCase)) return i;
+            if(Regex.IsMatch(line,@"^(ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ|ΤΕΛΟΣ\\b)",RegexOptions.IgnoreCase)) return i;
+            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ|ΤΕΛΟΣ_ΑΝ|ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ|ΜΕΧΡΙΣ_ΟΤΟΥ)\\b",RegexOptions.IgnoreCase)) return i;
 
-            var ifm=Regex.Match(line,@"^ΑΝ\s+(.+?)\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
+            var ifm=Regex.Match(line,@"^ΑΝ\\s+(.+?)\\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
             if(ifm.Success)
             {
                 var (elseAt,endAt)=FindIfBounds(lines,i+1,to);
                 if(ToBool(Eval(ifm.Groups[1].Value,i+1))) ExecuteBlock(lines,i+1,elseAt>=0?elseAt:endAt,output,input);
                 else if(elseAt>=0) ExecuteBlock(lines,elseAt+1,endAt,output,input);
-                i=endAt; continue;
+                i=endAt;continue;
             }
 
-            var write=Regex.Match(line,@"^(ΓΡΑΨΕ|ΕΜΦΑΝΙΣΕ)\s+(.+)$",RegexOptions.IgnoreCase);
+            var read=Regex.Match(line,@"^ΔΙΑΒΑΣΕ\\s+(.+)$",RegexOptions.IgnoreCase);
+            if(read.Success)
+            {
+                if(input is null) throw Error(i+1,"Δεν είναι διαθέσιμη είσοδος δεδομένων.");
+                foreach(var name in read.Groups[1].Value.Split(',',StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if(!_vars.TryGetValue(name,out var info)) throw Error(i+1,$"Η μεταβλητή «{name}» δεν έχει δηλωθεί.");
+                    var raw=input(name);
+                    try {
+                        object value=info.Type switch {
+                            "ΑΚΕΡΑΙΕΣ"=>int.Parse(raw,CultureInfo.CurrentCulture),
+                            "ΠΡΑΓΜΑΤΙΚΕΣ"=>double.Parse(raw,CultureInfo.CurrentCulture),
+                            "ΛΟΓΙΚΕΣ"=>raw.Equals("ΑΛΗΘΗΣ",StringComparison.OrdinalIgnoreCase)?true:raw.Equals("ΨΕΥΔΗΣ",StringComparison.OrdinalIgnoreCase)?false:bool.Parse(raw),
+                            _=>raw };
+                        Assign(name,value,i+1);
+                    } catch(FormatException) { throw Error(i+1,$"Μη έγκυρη τιμή για τη μεταβλητή «{name}»."); }
+                }
+                continue;
+            }
+
+            var whileM=Regex.Match(line,@"^ΟΣΟ\\s+(.+?)\\s+ΕΠΑΝΑΛΑΒΕ$",RegexOptions.IgnoreCase);
+            if(whileM.Success)
+            {
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΟΣΟ\\b.*\\bΕΠΑΝΑΛΑΒΕ$",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
+                int guard=0;
+                while(ToBool(Eval(whileM.Groups[1].Value,i+1)))
+                {
+                    ExecuteBlock(lines,i+1,loopEnd,output,input);
+                    if(++guard>100000) throw Error(i+1,"Η επανάληψη ξεπέρασε τα 100000 βήματα.");
+                }
+                i=loopEnd;continue;
+            }
+
+            var forM=Regex.Match(line,@"^ΓΙΑ\\s+([\\p{L}_][\\p{L}\\p{N}_]*)\\s+ΑΠΟ\\s+(.+?)\\s+ΜΕΧΡΙ\\s+(.+?)(?:\\s+ΜΕ_ΒΗΜΑ\\s+(.+))?$",RegexOptions.IgnoreCase);
+            if(forM.Success)
+            {
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΓΙΑ\\b",@"^ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ$");
+                var name=forM.Groups[1].Value;
+                var first=Convert.ToDouble(Eval(forM.Groups[2].Value,i+1),CultureInfo.InvariantCulture);
+                var last=Convert.ToDouble(Eval(forM.Groups[3].Value,i+1),CultureInfo.InvariantCulture);
+                var step=forM.Groups[4].Success?Convert.ToDouble(Eval(forM.Groups[4].Value,i+1),CultureInfo.InvariantCulture):1d;
+                if(step==0) throw Error(i+1,"Το βήμα της ΓΙΑ δεν μπορεί να είναι 0.");
+                for(var v=first;step>0?v<=last:v>=last;v+=step)
+                {
+                    Assign(name,v,i+1);
+                    ExecuteBlock(lines,i+1,loopEnd,output,input);
+                }
+                i=loopEnd;continue;
+            }
+
+            if(Regex.IsMatch(line,@"^ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ$",RegexOptions.IgnoreCase))
+            {
+                var loopEnd=FindMatching(lines,i+1,to,@"^ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ$",@"^ΜΕΧΡΙΣ_ΟΤΟΥ\\b");
+                var until=Regex.Match(lines[loopEnd].Trim(),@"^ΜΕΧΡΙΣ_ΟΤΟΥ\\s+(.+)$",RegexOptions.IgnoreCase);
+                if(!until.Success) throw Error(loopEnd+1,"Αναμενόταν συνθήκη μετά το ΜΕΧΡΙΣ_ΟΤΟΥ.");
+                int guard=0;
+                do
+                {
+                    ExecuteBlock(lines,i+1,loopEnd,output,input);
+                    if(++guard>100000) throw Error(i+1,"Η επανάληψη ξεπέρασε τα 100000 βήματα.");
+                } while(!ToBool(Eval(until.Groups[1].Value,loopEnd+1)));
+                i=loopEnd;continue;
+            }
+
+            var write=Regex.Match(line,@"^(ΓΡΑΨΕ|ΕΜΦΑΝΙΣΕ)\\s+(.+)$",RegexOptions.IgnoreCase);
             if(write.Success){output.Add(Print(write.Groups[2].Value,i+1));continue;}
 
-            var assign=Regex.Match(line,@"^([\p{L}_][\p{L}\p{N}_]*)\s*(?:<-|←)\s*(.+)$");
+            var assign=Regex.Match(line,@"^([\\p{L}_][\\p{L}\\p{N}_]*)\\s*(?:<-|←)\\s*(.+)$");
             if(assign.Success){Assign(assign.Groups[1].Value,Eval(assign.Groups[2].Value,i+1),i+1);continue;}
 
-            if(Regex.IsMatch(line,@"^(ΠΡΟΓΡΑΜΜΑ|ΑΛΓΟΡΙΘΜΟΣ|ΜΕΤΑΒΛΗΤΕΣ|ΑΚΕΡΑΙΕΣ|ΠΡΑΓΜΑΤΙΚΕΣ|ΧΑΡΑΚΤΗΡΕΣ|ΛΟΓΙΚΕΣ)\b",RegexOptions.IgnoreCase)) continue;
-            if(Regex.IsMatch(line,@"^ΔΙΑΒΑΣΕ\b",RegexOptions.IgnoreCase)) throw Error(i+1,"Η ΔΙΑΒΑΣΕ θα ενεργοποιηθεί στο επόμενο βήμα με διαδραστική είσοδο.");
+            if(Regex.IsMatch(line,@"^(ΠΡΟΓΡΑΜΜΑ|ΑΛΓΟΡΙΘΜΟΣ|ΜΕΤΑΒΛΗΤΕΣ|ΑΚΕΡΑΙΕΣ|ΠΡΑΓΜΑΤΙΚΕΣ|ΧΑΡΑΚΤΗΡΕΣ|ΛΟΓΙΚΕΣ)\\b",RegexOptions.IgnoreCase)) continue;
             throw Error(i+1,$"Δεν αναγνωρίζεται η εντολή «{line}».");
         }
         return to;

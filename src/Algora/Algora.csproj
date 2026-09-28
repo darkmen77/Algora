@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>Algora</AssemblyName>
     <RootNamespace>Algora</RootNamespace>
-    <Version>0.1.0-alpha.5</Version>
+    <Version>0.1.0-alpha.6</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />

@@ -56,7 +56,7 @@ public sealed class Interpreter
     {
         expr = expr.Trim();
         if (_vars.TryGetValue(expr, out var exact)) return exact;
-        foreach (var pair in _vars.OrderByDescending(x => x.Key.Length))
+        foreach (var pair in _vars.OrderByDescending(x => x.Key.Length, Comparer<int>.Default))
             expr = Regex.Replace(expr, $@"\b{Regex.Escape(pair.Key)}\b", Convert.ToString(pair.Value, CultureInfo.InvariantCulture) ?? "0", RegexOptions.IgnoreCase);
         var table = new DataTable { Locale = CultureInfo.InvariantCulture };
         return table.Compute(expr.Replace(",", "."), "");

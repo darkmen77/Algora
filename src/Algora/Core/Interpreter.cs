@@ -9,7 +9,7 @@ public sealed class Interpreter
     private readonly Dictionary<string, VariableInfo> _vars = new(StringComparer.OrdinalIgnoreCase);
     public IReadOnlyDictionary<string, object?> Variables => _vars.ToDictionary(x=>x.Key,x=>x.Value.Value,StringComparer.OrdinalIgnoreCase);
 
-    public string Run(string source)
+    public string Run(string source, Func<string, string>? input = null)
     {
         _vars.Clear();
         var output=new List<string>();
@@ -17,7 +17,7 @@ public sealed class Interpreter
         DeclareVariables(lines);
         var start=Array.FindIndex(lines,l=>l.Trim().Equals("ΑΡΧΗ",StringComparison.OrdinalIgnoreCase));
         if(start<0) throw Error(1,"Δεν βρέθηκε η λέξη ΑΡΧΗ.");
-        ExecuteBlock(lines,start+1,lines.Length,output);
+        ExecuteBlock(lines,start+1,lines.Length,output,input);
         return string.Join(Environment.NewLine,output);
     }
 
@@ -37,7 +37,7 @@ public sealed class Interpreter
         }
     }
 
-    int ExecuteBlock(string[] lines,int from,int to,List<string> output)
+    int ExecuteBlock(string[] lines,int from,int to,List<string> output,Func<string,string>? input)
     {
         for(int i=from;i<to;i++)
         {
@@ -50,8 +50,8 @@ public sealed class Interpreter
             if(ifm.Success)
             {
                 var (elseAt,endAt)=FindIfBounds(lines,i+1,to);
-                if(ToBool(Eval(ifm.Groups[1].Value,i+1))) ExecuteBlock(lines,i+1,elseAt>=0?elseAt:endAt,output);
-                else if(elseAt>=0) ExecuteBlock(lines,elseAt+1,endAt,output);
+                if(ToBool(Eval(ifm.Groups[1].Value,i+1))) ExecuteBlock(lines,i+1,elseAt>=0?elseAt:endAt,output,input);
+                else if(elseAt>=0) ExecuteBlock(lines,elseAt+1,endAt,output,input);
                 i=endAt; continue;
             }
 
@@ -66,6 +66,13 @@ public sealed class Interpreter
             throw Error(i+1,$"Δεν αναγνωρίζεται η εντολή «{line}».");
         }
         return to;
+    }
+
+    int FindMatching(string[] lines,int from,int to,string openPattern,string closePattern)
+    {
+        int depth=0;
+        for(int i=from;i<to;i++){var s=lines[i].Trim();if(Regex.IsMatch(s,openPattern,RegexOptions.IgnoreCase))depth++;else if(Regex.IsMatch(s,closePattern,RegexOptions.IgnoreCase)){if(depth==0)return i;depth--;}}
+        throw Error(from,"Λείπει το τέλος της δομής επανάληψης.");
     }
 
     (int ElseAt,int EndAt) FindIfBounds(string[] lines,int from,int to)

@@ -1,42 +1,21 @@
-<Window x:Class="Algora.MainWindow"
- xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
- Title="Algora — v0.1.0-alpha.1" Width="1280" Height="800" MinWidth="900" MinHeight="600"
- Background="#F4F7FB" KeyDown="Window_KeyDown">
- <Grid>
-  <Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="*"/><RowDefinition Height="28"/></Grid.RowDefinitions>
-  <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E3E8F0" BorderThickness="0,0,0,1">
-   <Grid Margin="18,0">
-    <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-     <Border Background="#4F46E5" CornerRadius="10" Width="40" Height="40"><TextBlock Text="A" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-     <StackPanel Margin="12,0,0,0"><TextBlock Text="Algora" FontSize="20" FontWeight="SemiBold" Foreground="#172033"/><TextBlock Text="Εργαστήριο Αλγοριθμικής &amp; ΓΛΩΣΣΑΣ" FontSize="11" Foreground="#6B7280"/></StackPanel>
-    </StackPanel>
-    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-     <Button x:Name="RunButton" Content="▶  Εκτέλεση" Click="Run_Click" Padding="16,9" Margin="4" Background="#4F46E5" Foreground="White" BorderThickness="0"/>
-     <Button Content="☾  Θέμα" Click="Theme_Click" Padding="14,9" Margin="4" Background="#EEF2FF" Foreground="#3730A3" BorderThickness="0"/>
-    </StackPanel>
-   </Grid>
-  </Border>
-  <Grid Grid.Row="1" Margin="16">
-   <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-   <Border x:Name="EditorCard" Background="White" CornerRadius="12" Padding="1">
-    <Grid><Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition/></Grid.RowDefinitions>
-     <Border Background="#F8FAFC" CornerRadius="12,12,0,0"><TextBlock Text="  Κώδικας" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#334155"/></Border>
-     <TextBox x:Name="Editor" Grid.Row="1" AcceptsReturn="True" AcceptsTab="True" FontFamily="Cascadia Mono,Consolas" FontSize="16" Padding="16" BorderThickness="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" Text="ΠΡΟΓΡΑΜΜΑ Πρώτο&#10;ΜΕΤΑΒΛΗΤΕΣ&#10;  ΑΚΕΡΑΙΕΣ: α, β, άθροισμα&#10;ΑΡΧΗ&#10;  α &lt;- 10&#10;  β &lt;- 5&#10;  άθροισμα &lt;- α + β&#10;  ΓΡΑΨΕ 'Το άθροισμα είναι:', άθροισμα&#10;ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ"/>
-    </Grid>
-   </Border>
-   <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch" Background="Transparent"/>
-   <Border x:Name="OutputCard" Grid.Column="2" Background="White" CornerRadius="12">
-    <Grid><Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition Height="*"/><RowDefinition Height="180"/></Grid.RowDefinitions>
-     <Border Background="#F8FAFC" CornerRadius="12,12,0,0"><TextBlock Text="  Κονσόλα" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#334155"/></Border>
-     <TextBox x:Name="ConsoleBox" Grid.Row="1" IsReadOnly="True" FontFamily="Cascadia Mono,Consolas" FontSize="14" Padding="14" BorderThickness="0" Text="Έτοιμο για εκτέλεση." TextWrapping="Wrap"/>
-     <Border Grid.Row="2" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="12">
-      <StackPanel><TextBlock Text="Μεταβλητές" FontWeight="SemiBold" Margin="0,0,0,8"/><DataGrid x:Name="VariablesGrid" AutoGenerateColumns="False" HeadersVisibility="Column" IsReadOnly="True" BorderThickness="0"><DataGrid.Columns><DataGridTextColumn Header="Όνομα" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Τιμή" Binding="{Binding Value}" Width="*"/></DataGrid.Columns></DataGrid></StackPanel>
-     </Border>
-    </Grid>
-   </Border>
-  </Grid>
-  <Border Grid.Row="2" Background="#172033"><Grid Margin="12,0"><TextBlock x:Name="StatusText" Text="Algora • Έτοιμο" Foreground="#CBD5E1" FontSize="11" VerticalAlignment="Center"/><TextBlock Text="F11  Πλήρης οθόνη" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/></Grid></Border>
- </Grid>
-</Window>
+<Window x:Class="Algora.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Algora — v0.1.0-alpha.2" Width="1280" Height="800" MinWidth="960" MinHeight="620" KeyDown="Window_KeyDown">
+<Window.Resources>
+ <Style x:Key="ToolButton" TargetType="Button"><Setter Property="Padding" Value="13,8"/><Setter Property="Margin" Value="3"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Cursor" Value="Hand"/><Setter Property="FontSize" Value="13"/></Style>
+</Window.Resources>
+<Grid x:Name="Root"><Grid.RowDefinitions><RowDefinition Height="64"/><RowDefinition Height="48"/><RowDefinition Height="*"/><RowDefinition Height="30"/></Grid.RowDefinitions>
+<Border x:Name="TopBar" Grid.Row="0" BorderThickness="0,0,0,1"><Grid Margin="18,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+<StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Background="#5B4FF7" CornerRadius="11" Width="42" Height="42"><TextBlock Text="A" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><StackPanel Margin="12,0"><TextBlock x:Name="TitleText" Text="Algora" FontSize="21" FontWeight="SemiBold"/><TextBlock x:Name="SubtitleText" Text="Εργαστήριο Αλγοριθμικής &amp; ΓΛΩΣΣΑΣ" FontSize="11"/></StackPanel></StackPanel>
+<StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"><Button x:Name="ThemeButton" Style="{StaticResource ToolButton}" Content="☾  Θέμα" Click="Theme_Click"/></StackPanel></Grid></Border>
+<Border x:Name="Toolbar" Grid.Row="1" BorderThickness="0,0,0,1"><StackPanel Orientation="Horizontal" Margin="14,4">
+<Button Style="{StaticResource ToolButton}" Content="＋  Νέο" Click="New_Click"/><Button Style="{StaticResource ToolButton}" Content="⌂  Άνοιγμα" Click="Open_Click"/><Button Style="{StaticResource ToolButton}" Content="▣  Αποθήκευση" Click="Save_Click"/>
+<Border Width="1" Margin="9,6"/><Button x:Name="RunButton" Style="{StaticResource ToolButton}" Content="▶  Εκτέλεση   F5" Click="Run_Click"/><Button Style="{StaticResource ToolButton}" Content="■  Καθαρισμός" Click="Clear_Click"/></StackPanel></Border>
+<Grid Grid.Row="2" Margin="14"><Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+<Border x:Name="EditorCard" CornerRadius="12" BorderThickness="1"><Grid><Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition/></Grid.RowDefinitions>
+<Border x:Name="EditorHeader" CornerRadius="12,12,0,0"><Grid Margin="14,0"><TextBlock x:Name="EditorHeaderText" Text="Κώδικας" VerticalAlignment="Center" FontWeight="SemiBold"/><TextBlock x:Name="FileText" Text="χωρίς τίτλο.glossa" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11"/></Grid></Border>
+<Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="48"/><ColumnDefinition/></Grid.ColumnDefinitions><TextBox x:Name="LineNumbers" IsReadOnly="True" TextAlignment="Right" Padding="4,14,8,14" BorderThickness="0" FontFamily="Cascadia Mono,Consolas" FontSize="15" IsTabStop="False"/><TextBox x:Name="Editor" Grid.Column="1" AcceptsReturn="True" AcceptsTab="True" FontFamily="Cascadia Mono,Consolas" FontSize="15" Padding="12,14" BorderThickness="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap" TextChanged="Editor_TextChanged" KeyDown="Editor_KeyDown" Text="ΠΡΟΓΡΑΜΜΑ Πρώτο&#10;ΜΕΤΑΒΛΗΤΕΣ&#10;  ΑΚΕΡΑΙΕΣ: α, β, άθροισμα&#10;ΑΡΧΗ&#10;  α &lt;- 10&#10;  β &lt;- 5&#10;  άθροισμα &lt;- α + β&#10;  ΓΡΑΨΕ 'Το άθροισμα είναι:', άθροισμα&#10;ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ"/></Grid></Grid></Border>
+<GridSplitter Grid.Column="1" Width="8" Background="Transparent"/>
+<Border x:Name="OutputCard" Grid.Column="2" CornerRadius="12" BorderThickness="1"><Grid><Grid.RowDefinitions><RowDefinition Height="42"/><RowDefinition Height="*"/><RowDefinition Height="200"/></Grid.RowDefinitions>
+<Border x:Name="ConsoleHeader" CornerRadius="12,12,0,0"><TextBlock x:Name="ConsoleHeaderText" Text="  Κονσόλα" VerticalAlignment="Center" FontWeight="SemiBold"/></Border><TextBox x:Name="ConsoleBox" Grid.Row="1" IsReadOnly="True" FontFamily="Cascadia Mono,Consolas" FontSize="14" Padding="14" BorderThickness="0" Text="Έτοιμο για εκτέλεση." TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+<Border x:Name="VariablesPanel" Grid.Row="2" BorderThickness="0,1,0,0" Padding="12"><Grid><Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition/></Grid.RowDefinitions><TextBlock x:Name="VariablesTitle" Text="Μεταβλητές" FontWeight="SemiBold" VerticalAlignment="Center"/><DataGrid x:Name="VariablesGrid" Grid.Row="1" AutoGenerateColumns="False" HeadersVisibility="Column" IsReadOnly="True" BorderThickness="0" GridLinesVisibility="Horizontal"><DataGrid.Columns><DataGridTextColumn Header="Όνομα" Binding="{Binding Name}" Width="*"/><DataGridTextColumn Header="Τιμή" Binding="{Binding Value}" Width="*"/></DataGrid.Columns></DataGrid></Grid></Border></Grid></Border></Grid>
+<Border x:Name="StatusBar" Grid.Row="3"><Grid Margin="12,0"><StackPanel Orientation="Horizontal"><Ellipse x:Name="StatusDot" Width="7" Height="7" Margin="0,0,7,0"/><TextBlock x:Name="StatusText" Text="Έτοιμο" FontSize="11" VerticalAlignment="Center"/></StackPanel><TextBlock x:Name="VersionText" Text="Algora v0.1.0-alpha.2   •   F11 Πλήρης οθόνη" FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center"/></Grid></Border>
+</Grid></Window>

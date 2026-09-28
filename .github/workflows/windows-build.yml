@@ -18,5 +18,5 @@ jobs:
       - run: dotnet publish src/Algora/Algora.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish
       - uses: actions/upload-artifact@v4
         with:
-          name: Algora-v0.1.0-alpha.3-win-x64
+          name: Algora-v0.1.0-alpha.4-win-x64
           path: publish/

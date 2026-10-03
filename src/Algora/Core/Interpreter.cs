@@ -48,15 +48,36 @@ public sealed class Interpreter
             var line=lines[i].Trim();
             if(string.IsNullOrWhiteSpace(line)||line.StartsWith("!")) continue;
             if(Regex.IsMatch(line,@"^(ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ|ΤΕΛΟΣ\b)",RegexOptions.IgnoreCase)) return i;
-            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ|ΤΕΛΟΣ_ΑΝ|ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ|ΜΕΧΡΙΣ_ΟΤΟΥ)\b",RegexOptions.IgnoreCase)) return i;
+            if(Regex.IsMatch(line,@"^(ΑΛΛΙΩΣ(?:_ΑΝ)?|ΤΕΛΟΣ_ΑΝ|ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ|ΜΕΧΡΙΣ_ΟΤΟΥ)\b",RegexOptions.IgnoreCase)) return i;
 
             var ifm=Regex.Match(line,@"^ΑΝ\s+(.+?)\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
             if(ifm.Success)
             {
-                var (elseAt,endAt)=FindIfBounds(lines,i+1,to);
+                var (branches,endAt)=FindIfBranches(lines,i+1,to);
                 Snap(i+1,line,output);
-                if(ToBool(Eval(ifm.Groups[1].Value,i+1))) ExecuteBlock(lines,i+1,elseAt>=0?elseAt:endAt,output,input);
-                else if(elseAt>=0) ExecuteBlock(lines,elseAt+1,endAt,output,input);
+                bool executed=false;
+                if(ToBool(Eval(ifm.Groups[1].Value,i+1)))
+                {
+                    ExecuteBlock(lines,i+1,branches.Count>0?branches[0]:endAt,output,input);executed=true;
+                }
+                else
+                {
+                    for(int b=0;b<branches.Count&&!executed;b++)
+                    {
+                        int at=branches[b], next=b+1<branches.Count?branches[b+1]:endAt;
+                        var branchLine=lines[at].Trim();
+                        var elseif=Regex.Match(branchLine,@"^ΑΛΛΙΩΣ_ΑΝ\s+(.+?)\s+ΤΟΤΕ$",RegexOptions.IgnoreCase);
+                        if(elseif.Success)
+                        {
+                            Snap(at+1,branchLine,output);
+                            if(ToBool(Eval(elseif.Groups[1].Value,at+1))){ExecuteBlock(lines,at+1,next,output,input);executed=true;}
+                        }
+                        else if(Regex.IsMatch(branchLine,@"^ΑΛΛΙΩΣ$",RegexOptions.IgnoreCase))
+                        {
+                            ExecuteBlock(lines,at+1,next,output,input);executed=true;
+                        }
+                    }
+                }
                 i=endAt;continue;
             }
 
@@ -147,15 +168,19 @@ public sealed class Interpreter
         throw Error(from,"Λείπει το τέλος της δομής επανάληψης.");
     }
 
-    (int ElseAt,int EndAt) FindIfBounds(string[] lines,int from,int to)
+    (List<int> Branches,int EndAt) FindIfBranches(string[] lines,int from,int to)
     {
-        int depth=0,elseAt=-1;
+        int depth=0;var branches=new List<int>();
         for(int i=from;i<to;i++)
         {
             var s=lines[i].Trim();
             if(Regex.IsMatch(s,@"^ΑΝ\b.*\bΤΟΤΕ$",RegexOptions.IgnoreCase)) depth++;
-            else if(Regex.IsMatch(s,@"^ΤΕΛΟΣ_ΑΝ$",RegexOptions.IgnoreCase)){if(depth==0)return(elseAt,i);depth--;}
-            else if(depth==0&&Regex.IsMatch(s,@"^ΑΛΛΙΩΣ$",RegexOptions.IgnoreCase)) elseAt=i;
+            else if(Regex.IsMatch(s,@"^ΤΕΛΟΣ_ΑΝ$",RegexOptions.IgnoreCase))
+            {
+                if(depth==0)return(branches,i);
+                depth--;
+            }
+            else if(depth==0&&(Regex.IsMatch(s,@"^ΑΛΛΙΩΣ$",RegexOptions.IgnoreCase)||Regex.IsMatch(s,@"^ΑΛΛΙΩΣ_ΑΝ\s+.+?\s+ΤΟΤΕ$",RegexOptions.IgnoreCase))) branches.Add(i);
         }
         throw Error(from,"Λείπει ΤΕΛΟΣ_ΑΝ.");
     }

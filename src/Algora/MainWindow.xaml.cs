@@ -28,7 +28,7 @@ public partial class MainWindow : Window
 <Span color='String' begin='&quot;' end='&quot;'/>
 <Span color='Comment' begin='!' end='\n'/>
 <Keywords color='Keyword'>
-<Word>ΠΡΟΓΡΑΜΜΑ</Word><Word>ΑΛΓΟΡΙΘΜΟΣ</Word><Word>ΜΕΤΑΒΛΗΤΕΣ</Word><Word>ΑΚΕΡΑΙΕΣ</Word><Word>ΠΡΑΓΜΑΤΙΚΕΣ</Word><Word>ΧΑΡΑΚΤΗΡΕΣ</Word><Word>ΛΟΓΙΚΕΣ</Word><Word>ΑΡΧΗ</Word><Word>ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</Word><Word>ΔΙΑΒΑΣΕ</Word><Word>ΓΡΑΨΕ</Word><Word>ΕΜΦΑΝΙΣΕ</Word><Word>ΑΝ</Word><Word>ΤΟΤΕ</Word><Word>ΑΛΛΙΩΣ</Word><Word>ΤΕΛΟΣ_ΑΝ</Word><Word>ΚΑΙ</Word><Word>Ή</Word><Word>Η</Word><Word>ΟΧΙ</Word><Word>ΑΛΗΘΗΣ</Word><Word>ΨΕΥΔΗΣ</Word><Word>ΟΣΟ</Word><Word>ΕΠΑΝΑΛΑΒΕ</Word><Word>ΓΙΑ</Word><Word>ΑΠΟ</Word><Word>ΜΕΧΡΙ</Word><Word>ΜΕ_ΒΗΜΑ</Word><Word>ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</Word><Word>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ</Word><Word>ΜΕΧΡΙΣ_ΟΤΟΥ</Word>
+<Word>ΠΡΟΓΡΑΜΜΑ</Word><Word>ΑΛΓΟΡΙΘΜΟΣ</Word><Word>ΜΕΤΑΒΛΗΤΕΣ</Word><Word>ΑΚΕΡΑΙΕΣ</Word><Word>ΠΡΑΓΜΑΤΙΚΕΣ</Word><Word>ΧΑΡΑΚΤΗΡΕΣ</Word><Word>ΛΟΓΙΚΕΣ</Word><Word>ΑΡΧΗ</Word><Word>ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ</Word><Word>ΔΙΑΒΑΣΕ</Word><Word>ΓΡΑΨΕ</Word><Word>ΕΜΦΑΝΙΣΕ</Word><Word>ΑΝ</Word><Word>ΤΟΤΕ</Word><Word>ΑΛΛΙΩΣ</Word><Word>ΑΛΛΙΩΣ_ΑΝ</Word><Word>ΤΕΛΟΣ_ΑΝ</Word><Word>ΚΑΙ</Word><Word>Ή</Word><Word>Η</Word><Word>ΟΧΙ</Word><Word>ΑΛΗΘΗΣ</Word><Word>ΨΕΥΔΗΣ</Word><Word>ΟΣΟ</Word><Word>ΕΠΑΝΑΛΑΒΕ</Word><Word>ΓΙΑ</Word><Word>ΑΠΟ</Word><Word>ΜΕΧΡΙ</Word><Word>ΜΕ_ΒΗΜΑ</Word><Word>ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ</Word><Word>ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ</Word><Word>ΜΕΧΡΙΣ_ΟΤΟΥ</Word>
 </Keywords></RuleSet></SyntaxDefinition>";
   using var sr=new StringReader(xshd);using var xr=XmlReader.Create(sr);Editor.SyntaxHighlighting=HighlightingLoader.Load(xr,HighlightingManager.Instance);
  }
@@ -71,10 +71,10 @@ public partial class MainWindow : Window
    if(u=="ΑΡΧΗ"){vars=false;indent=0;result.Add(t);indent=1;continue;}
    if(u=="ΜΕΤΑΒΛΗΤΕΣ"){vars=true;indent=0;result.Add(t);continue;}
    if(u.StartsWith("ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ")||u=="ΤΕΛΟΣ"){indent=0;result.Add(t);continue;}
-   bool close=u=="ΑΛΛΙΩΣ"||u=="ΤΕΛΟΣ_ΑΝ"||u=="ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ"||u.StartsWith("ΜΕΧΡΙΣ_ΟΤΟΥ ");
+   bool close=u=="ΑΛΛΙΩΣ"||u.StartsWith("ΑΛΛΙΩΣ_ΑΝ ")||u=="ΤΕΛΟΣ_ΑΝ"||u=="ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ"||u.StartsWith("ΜΕΧΡΙΣ_ΟΤΟΥ ");
    if(close)indent=Math.Max(1,indent-1);
    var level=vars&&u!="ΜΕΤΑΒΛΗΤΕΣ"?1:indent;result.Add(new string(' ',Math.Max(0,level)*2)+t);
-   bool open=(u.StartsWith("ΑΝ ")&&u.EndsWith(" ΤΟΤΕ"))||(u.StartsWith("ΟΣΟ ")&&u.EndsWith(" ΕΠΑΝΑΛΑΒΕ"))||u.StartsWith("ΓΙΑ ")||u=="ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ"||u=="ΑΛΛΙΩΣ";
+   bool open=(u.StartsWith("ΑΝ ")&&u.EndsWith(" ΤΟΤΕ"))||(u.StartsWith("ΟΣΟ ")&&u.EndsWith(" ΕΠΑΝΑΛΑΒΕ"))||u.StartsWith("ΓΙΑ ")||u=="ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ"||u=="ΑΛΛΙΩΣ"||u.StartsWith("ΑΛΛΙΩΣ_ΑΝ ");
    if(open)indent++;
   }
   var caret=Editor.CaretOffset;SetCode(string.Join(Environment.NewLine,result));Editor.CaretOffset=Math.Min(caret,Editor.Text.Length);

@@ -15,7 +15,7 @@ namespace Algora;
 public partial class MainWindow : Window
 {
  readonly Interpreter _interpreter=new(); readonly Dictionary<int,Shape> _flowShapes=new(); CompletionWindow? _completion; static readonly string[] Keywords={"ΠΡΟΓΡΑΜΜΑ","ΑΛΓΟΡΙΘΜΟΣ","ΜΕΤΑΒΛΗΤΕΣ","ΑΚΕΡΑΙΕΣ","ΠΡΑΓΜΑΤΙΚΕΣ","ΧΑΡΑΚΤΗΡΕΣ","ΛΟΓΙΚΕΣ","ΑΡΧΗ","ΤΕΛΟΣ_ΠΡΟΓΡΑΜΜΑΤΟΣ","ΔΙΑΒΑΣΕ","ΓΡΑΨΕ","ΕΜΦΑΝΙΣΕ","ΑΝ","ΤΟΤΕ","ΑΛΛΙΩΣ","ΑΛΛΙΩΣ_ΑΝ","ΤΕΛΟΣ_ΑΝ","ΚΑΙ","Ή","ΟΧΙ","ΑΛΗΘΗΣ","ΨΕΥΔΗΣ","ΟΣΟ","ΕΠΑΝΑΛΑΒΕ","ΓΙΑ","ΑΠΟ","ΜΕΧΡΙ","ΜΕ_ΒΗΜΑ","ΤΕΛΟΣ_ΕΠΑΝΑΛΗΨΗΣ","ΑΡΧΗ_ΕΠΑΝΑΛΗΨΗΣ","ΜΕΧΡΙΣ_ΟΤΟΥ"}; bool _dark,_panelVisible=true,_focusMode; int _stepIndex=-1; string? _file; WindowStyle _oldStyle; WindowState _oldState;
- public MainWindow(){InitializeComponent();Loaded+=(_,__)=>{InstallHighlighting();ApplyTheme();};}
+ public MainWindow(){InitializeComponent();Editor.TextArea.TextEntered+=Editor_TextEntered;Loaded+=(_,__)=>{InstallHighlighting();ApplyTheme();};}
  static Brush B(string h)=>new SolidColorBrush((Color)ColorConverter.ConvertFromString(h));
  string CodeText()=>Editor.Text.TrimEnd('\r','\n');
  void SetCode(string s)=>Editor.Text=s;

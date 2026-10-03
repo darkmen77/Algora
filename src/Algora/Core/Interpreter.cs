@@ -230,8 +230,8 @@ public sealed class Interpreter
         readonly List<string> t; int p; readonly Func<string,int,object> resolve; readonly int line;
         public ExpressionParser(string s,Func<string,int,object> r,int l){t=Tokenize(s);resolve=r;line=l;}
         public object Parse(){var v=Or();if(p<t.Count)throw Error(line,$"Μη αναμενόμενο «{t[p]}».");return v;}
-        object Or(){var v=And();while(Match("Ή","Η"))v=ToBool(v)||ToBool(And());return v;}
-        object And(){var v=Compare();while(Match("ΚΑΙ"))v=ToBool(v)&&ToBool(Compare());return v;}
+        object Or(){var v=And();while(Match("Ή","Η")){var r=And();v=ToBool(v)||ToBool(r);}return v;}
+        object And(){var v=Compare();while(Match("ΚΑΙ")){var r=Compare();v=ToBool(v)&&ToBool(r);}return v;}
         object Compare(){var a=Add();if(p<t.Count&&new[]{"=","<>",">","<",">=","<="}.Contains(t[p])){var op=t[p++];var b=Add();var c=Cmp(a,b);return op switch{"="=>c==0,"<>"=>c!=0,">"=>c>0,"<"=>c<0,">="=>c>=0,"<="=>c<=0,_=>false};}return a;}
         object Add(){var v=Mul();while(p<t.Count&&(t[p]=="+"||t[p]=="-")){var op=t[p++];var r=Mul();v=op=="+"?Num(v)+Num(r):Num(v)-Num(r);}return v;}
         object Mul(){var v=Unary();while(p<t.Count&&(t[p]=="*"||t[p]=="/")){var op=t[p++];var r=Unary();v=op=="*"?Num(v)*Num(r):Num(v)/Num(r);}return v;}
